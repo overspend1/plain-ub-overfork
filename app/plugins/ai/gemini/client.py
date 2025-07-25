@@ -1,8 +1,8 @@
 import io
 import logging
 import wave
+import struct
 
-import numpy as np
 from google.genai.client import AsyncClient, Client
 from google.genai.types import Blob, GenerateContentResponse
 from pyrogram.enums import ParseMode
@@ -109,8 +109,10 @@ class Response:
         n_samples = len(pcm) // (sample_width * channels)
         duration = n_samples / rate
 
-        dtype = {1: np.int8, 2: np.int16, 4: np.int32}[sample_width]
-        samples = np.frombuffer(pcm, dtype=dtype)
+        # Convert PCM data to samples without numpy
+        format_map = {1: 'b', 2: 'h', 4: 'i'}
+        format_char = format_map[sample_width]
+        samples = struct.unpack(f'<{n_samples}{format_char}', pcm[:n_samples * sample_width])
 
         chunk_size = max(1, len(samples) // 80)
 
@@ -119,7 +121,7 @@ class Response:
                 int(
                     min(
                         255,
-                        np.abs(samples[i : i + chunk_size]).mean()
+                        sum(abs(samples[i + j]) for j in range(min(chunk_size, len(samples) - i))) / chunk_size
                         / (2 ** (8 * sample_width - 1))
                         * 255,
                     )

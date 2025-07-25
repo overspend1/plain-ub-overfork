@@ -30,6 +30,11 @@ except ImportError:
 
 class TorrentLeecher:
     def __init__(self):
+        if not LIBTORRENT_AVAILABLE or lt is None:
+            self.session = None
+            self.active_torrents = {}
+            return
+            
         self.session = lt.session()
         self.session.listen_on(6881, 6891)
         self.active_torrents: Dict[str, Dict] = {}
@@ -38,7 +43,7 @@ class TorrentLeecher:
     
     def add_torrent(self, torrent_data: bytes, download_path: Path) -> str:
         """Add torrent to session and return info hash"""
-        if not LIBTORRENT_AVAILABLE:
+        if not LIBTORRENT_AVAILABLE or self.session is None:
             raise Exception("libtorrent not available - install python-libtorrent")
         
         info = lt.torrent_info(torrent_data)
@@ -139,7 +144,10 @@ class TorrentLeecher:
             del self.active_torrents[info_hash]
 
 
-torrent_leecher = TorrentLeecher()
+try:
+    torrent_leecher = TorrentLeecher()
+except Exception:
+    torrent_leecher = None
 
 
 async def download_torrent_file(url: str) -> bytes:
