@@ -28,7 +28,23 @@ class PluginLoader:
                 if any(f.suffix == '.py' and not f.name.startswith('_') for f in item.iterdir()):
                     plugins.append(item.name)
         
-        return plugins
+        return sorted(plugins)
+    
+    def discover_all_modules(self) -> Dict[str, List[str]]:
+        """Discover all modules (Python files) in each plugin directory"""
+        modules_by_plugin = {}
+        
+        for item in self.plugins_dir.iterdir():
+            if item.is_dir() and not item.name.startswith('_') and item.name != 'core':
+                modules = []
+                for py_file in item.glob("*.py"):
+                    if not py_file.name.startswith('_'):
+                        modules.append(py_file.stem)
+                
+                if modules:
+                    modules_by_plugin[item.name] = sorted(modules)
+        
+        return modules_by_plugin
     
     async def load_plugin(self, plugin_name: str) -> bool:
         """Load a specific plugin"""

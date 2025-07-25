@@ -172,3 +172,57 @@ async def plugin_info(bot: BOT, message: Message):
         info_text += f"**Supported Types:** {', '.join(plugin.supported_types)}\n"
     
     await message.reply(info_text)
+
+
+@bot.add_cmd(cmd="listmodules")
+@error_handler("List modules command failed")
+async def list_all_modules(bot: BOT, message: Message):
+    """
+    CMD: LISTMODULES
+    INFO: List all available modules in the plugins directory
+    USAGE: .listmodules
+    """
+    
+    # Get all modules by plugin
+    modules_by_plugin = plugin_loader.discover_all_modules()
+    loaded_plugins = plugin_loader.list_loaded_plugins()
+    
+    if not modules_by_plugin:
+        await message.reply("No modules found in plugins directory")
+        return
+    
+    list_text = "📁 **All Available Modules:**\n\n"
+    
+    total_plugins = 0
+    total_modules = 0
+    
+    for plugin_name, modules in modules_by_plugin.items():
+        total_plugins += 1
+        total_modules += len(modules)
+        
+        # Plugin status
+        status = "✅ Loaded" if plugin_name in loaded_plugins else "⭕ Not Loaded"
+        list_text += f"**📂 {plugin_name}** ({len(modules)} modules) - {status}\n"
+        
+        # List modules in this plugin
+        for module in modules:
+            list_text += f"   • `{module}.py`\n"
+        
+        list_text += "\n"
+    
+    # Summary
+    list_text += f"**📊 Summary:**\n"
+    list_text += f"• **{total_plugins}** plugin directories\n"  
+    list_text += f"• **{total_modules}** total modules\n"
+    list_text += f"• **{len(loaded_plugins)}** plugins loaded\n"
+    
+    # Split message if too long
+    if len(list_text) > 4000:
+        parts = [list_text[i:i+4000] for i in range(0, len(list_text), 4000)]
+        for i, part in enumerate(parts):
+            if i == 0:
+                await message.reply(part)
+            else:
+                await message.reply(f"**Continued...**\n\n{part}")
+    else:
+        await message.reply(list_text)

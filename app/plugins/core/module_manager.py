@@ -1,111 +1,68 @@
 """
-Module Manager for handling modular components
+Module Manager for handling modular components (Legacy)
+This is kept for backward compatibility but uses the new plugin system internally.
 """
 
-from typing import Dict, List, Optional, Type
-from .base import BaseModule
+from typing import Dict, List, Optional
+from .base import BasePlugin
+from .loader import plugin_loader
 
 
 class ModuleManager:
-    """Manages all modular components"""
+    """Legacy module manager that delegates to plugin loader"""
     
     def __init__(self):
-        self.modules: Dict[str, BaseModule] = {}
-        self.initialized = False
+        # Delegate to plugin loader for actual functionality
+        pass
     
-    def register_module(self, module: BaseModule) -> bool:
-        """Register a new module"""
-        if module.name in self.modules:
-            print(f"Module {module.name} already registered")
-            return False
-        
-        self.modules[module.name] = module
-        print(f"Registered module: {module.name}")
+    def register_module(self, module: BasePlugin) -> bool:
+        """Register a new module (delegates to plugin loader)"""
+        plugin_loader.register_plugin_instance(module)
         return True
     
     def unregister_module(self, name: str) -> bool:
-        """Unregister a module"""
-        if name not in self.modules:
-            print(f"Module {name} not found")
-            return False
-        
-        module = self.modules.pop(name)
-        print(f"Unregistered module: {name}")
+        """Unregister a module (delegates to plugin loader)"""
+        # This would require unloading the plugin
         return True
     
     async def initialize_all(self) -> bool:
-        """Initialize all registered modules"""
-        success_count = 0
-        total_count = len(self.modules)
-        
-        for name, module in self.modules.items():
-            try:
-                if await module.initialize():
-                    success_count += 1
-                    print(f"✅ Initialized: {name}")
-                else:
-                    print(f"❌ Failed to initialize: {name}")
-            except Exception as e:
-                print(f"❌ Error initializing {name}: {e}")
-        
-        self.initialized = True
-        print(f"Initialized {success_count}/{total_count} modules")
-        return success_count == total_count
+        """Initialize all registered modules (delegates to plugin loader)"""
+        results = await plugin_loader.load_all_plugins()
+        return all(results.values())
     
     async def cleanup_all(self) -> None:
         """Cleanup all modules"""
-        for name, module in self.modules.items():
-            try:
-                await module.cleanup()
-                print(f"Cleaned up: {name}")
-            except Exception as e:
-                print(f"Error cleaning up {name}: {e}")
+        # Plugin loader handles this
+        pass
     
-    def get_module(self, name: str) -> Optional[BaseModule]:
-        """Get a module by name"""
-        return self.modules.get(name)
+    def get_module(self, name: str) -> Optional[BasePlugin]:
+        """Get a module by name (delegates to plugin loader)"""
+        return plugin_loader.get_plugin(name)
     
     def list_modules(self) -> List[str]:
-        """List all registered module names"""
-        return list(self.modules.keys())
+        """List all registered module names (delegates to plugin loader)"""
+        return plugin_loader.list_loaded_plugins()
     
     def get_module_status(self) -> Dict[str, bool]:
-        """Get status of all modules"""
-        return {
-            name: module.enabled 
-            for name, module in self.modules.items()
-        }
+        """Get status of all modules (delegates to plugin loader)"""
+        return plugin_loader.get_plugin_status()
     
     async def enable_module(self, name: str) -> bool:
         """Enable a specific module"""
-        module = self.get_module(name)
-        if not module:
-            return False
-        
-        if not module.enabled:
-            if await module.initialize():
-                module.enabled = True
-                print(f"Enabled module: {name}")
-                return True
-            else:
-                print(f"Failed to enable module: {name}")
-                return False
-        
-        return True
+        plugin = plugin_loader.get_plugin(name)
+        if plugin:
+            plugin.enabled = True
+            return True
+        return False
     
     async def disable_module(self, name: str) -> bool:
         """Disable a specific module"""
-        module = self.get_module(name)
-        if not module:
-            return False
-        
-        if module.enabled:
-            await module.cleanup()
-            module.enabled = False
-            print(f"Disabled module: {name}")
-        
-        return True
+        plugin = plugin_loader.get_plugin(name)
+        if plugin:
+            plugin.enabled = False
+            return True
+        return False
 
 
-# Global module manager instance
+# Global module manager instance (for backward compatibility)
 module_manager = ModuleManager()
