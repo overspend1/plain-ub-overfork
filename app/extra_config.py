@@ -34,6 +34,6 @@ TAG_LOGGER: bool = False
 
 TAG_LOGGER_THREAD_ID: int = int(getenv("TAG_LOGGER_THREAD_ID", 0)) or None
 
-UPSTREAM_REPO: str = getenv("UPSTREAM_REPO", "https://github.com/thedragonsinn/plain-ub")
+UPSTREAM_REPO: str = getenv("UPSTREAM_REPO", "https://github.com/overspend1/plain-ub-overfork")
 
 USE_LEGACY_KANG: int = int(getenv("USE_LEGACY_KANG", 0))
