@@ -1,0 +1,14 @@
+# BoilerPlate Code for UB
+# git+https://github.com/thedragonsinn/ub-core.git
+# moved to scripts/install_ub_core.sh
+
+yt-dlp>=2024.5.27
+pillow
+openai
+aiohttp
+python-libtorrent
+
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+google-genai

@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram Userbot
+After=network.target
+
+[Service]
+Type=simple
+User=wiktoro
+WorkingDirectory=/home/wiktoro/Pobrane/plain-ub-main
+ExecStart=/bin/bash /home/wiktoro/Pobrane/plain-ub-main/run
+Restart=always
+RestartSec=10
+Environment=PATH=/home/wiktoro/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target
