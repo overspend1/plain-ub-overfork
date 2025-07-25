@@ -25,7 +25,7 @@ class HelpSystem:
         self.help_data = {
             # Admin Commands
             "admin": {
-                "title": "👑 Admin Commands",
+                "title": "Admin Commands",
                 "description": "Administrative tools for managing groups and users",
                 "commands": {
                     "ban": "Ban users from the group",
@@ -48,7 +48,7 @@ class HelpSystem:
             
             # AI Commands
             "ai": {
-                "title": "🤖 AI Commands", 
+                "title": "AI Commands", 
                 "description": "AI-powered features using Gemini",
                 "commands": {
                     "ai": "Simple AI query",
@@ -73,7 +73,7 @@ class HelpSystem:
             
             # File Commands
             "files": {
-                "title": "📁 File Management",
+                "title": "File Management",
                 "description": "File upload, download, and management tools",
                 "commands": {
                     "upload": "Upload files to various services",
@@ -97,7 +97,7 @@ class HelpSystem:
             
             # System Commands
             "system": {
-                "title": "⚙️ System Commands",
+                "title": "System Commands",
                 "description": "System information and management tools", 
                 "commands": {
                     "neofetch": "Display system information",
@@ -119,7 +119,7 @@ class HelpSystem:
             
             # Telegram Tools
             "tg_tools": {
-                "title": "📱 Telegram Tools",
+                "title": "Telegram Tools",
                 "description": "Telegram-specific utilities and tools",
                 "commands": {
                     "ping": "Check bot response time",
@@ -142,7 +142,7 @@ class HelpSystem:
             
             # Utilities
             "utils": {
-                "title": "🔧 Utilities",
+                "title": "Utilities",
                 "description": "General utility commands",
                 "commands": {
                     "calc": "Calculator",
@@ -158,7 +158,7 @@ class HelpSystem:
             
             # Miscellaneous  
             "misc": {
-                "title": "🎯 Miscellaneous",
+                "title": "Miscellaneous",
                 "description": "Various useful commands",
                 "commands": {
                     "alive": "Check if bot is alive",
@@ -174,7 +174,7 @@ class HelpSystem:
             
             # Network Tools
             "network": {
-                "title": "🌐 Network Tools", 
+                "title": "Network Tools", 
                 "description": "Network utilities and tools",
                 "commands": {
                     "network": "Network diagnostic tools"
@@ -187,7 +187,7 @@ class HelpSystem:
             
             # Sudo Commands
             "sudo": {
-                "title": "👤 Sudo Commands",
+                "title": "Sudo Commands",
                 "description": "Superuser management commands",
                 "commands": {
                     "sudo": "Execute commands as superuser",
@@ -204,7 +204,7 @@ class HelpSystem:
     
     def get_main_help(self) -> str:
         """Get main help page with all modules"""
-        help_text = """🤖 **PLAIN-UB Help System**
+        help_text = """**PLAIN-UB Help System**
 
 **Available Modules:**
 
@@ -282,7 +282,7 @@ class HelpSystem:
         if not found_in:
             return None
         
-        result = f"🔍 **Command Search: `.{command}`**\n\n"
+        result = f"**Command Search: `.{command}`**\n\n"
         
         for item in found_in:
             result += f"**{item['title']}**\n"
@@ -370,7 +370,7 @@ async def list_commands(bot: BOT, message: Message):
         return
     
     # Show all commands
-    commands_text = "📋 **All Available Commands:**\n\n"
+    commands_text = "**All Available Commands:**\n\n"
     
     for module_key, module_data in help_system.help_data.items():
         commands_text += f"**{module_data['title']}**\n"

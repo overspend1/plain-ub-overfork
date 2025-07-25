@@ -123,10 +123,10 @@ class PluginLoader:
                         self.plugin_modules[module_name] = module
                     
                     success_count += 1
-                    print(f"✅ Loaded: {module_name}")
+                    print(f"Loaded: {module_name}")
                     
                 except Exception as e:
-                    print(f"❌ Failed to load {module_name}: {e}")
+                    print(f"Failed to load {module_name}: {e}")
             
             if success_count > 0:
                 print(f"Loaded {success_count}/{len(plugin_files)} files from {plugin_name}")
