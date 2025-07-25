@@ -180,41 +180,64 @@ async def list_all_modules(bot: BOT, message: Message):
     """
     CMD: LISTMODULES
     INFO: List all available modules in the plugins directory
-    USAGE: .listmodules
+    USAGE: .listmodules [detailed]
     """
     
-    # Get all modules by plugin
-    modules_by_plugin = plugin_loader.discover_all_modules()
+    show_detailed = message.input and "detailed" in message.input.lower()
+    
+    # Get comprehensive module information
+    modules_info = plugin_loader.get_comprehensive_module_list()
     loaded_plugins = plugin_loader.list_loaded_plugins()
     
-    if not modules_by_plugin:
+    if not modules_info:
         await message.reply("No modules found in plugins directory")
         return
     
-    list_text = "📁 **All Available Modules:**\n\n"
+    list_text = "📁 **ALL AVAILABLE MODULES:**\n\n"
     
     total_plugins = 0
     total_modules = 0
+    total_subdirs = 0
     
-    for plugin_name, modules in modules_by_plugin.items():
+    for plugin_name, info in sorted(modules_info.items()):
         total_plugins += 1
-        total_modules += len(modules)
+        total_modules += info["total_files"]
+        total_subdirs += info["subdirectories"]
         
         # Plugin status
         status = "✅ Loaded" if plugin_name in loaded_plugins else "⭕ Not Loaded"
-        list_text += f"**📂 {plugin_name}** ({len(modules)} modules) - {status}\n"
         
-        # List modules in this plugin
-        for module in modules:
-            list_text += f"   • `{module}.py`\n"
+        # Show plugin header with details
+        subdir_info = f" + {info['subdirectories']} subdirs" if info["subdirectories"] > 0 else ""
+        list_text += f"**📂 {plugin_name.upper()}** ({info['total_files']} files{subdir_info}) - {status}\n"
+        
+        if show_detailed:
+            # Show all modules in detailed mode
+            for module in info["modules"]:
+                list_text += f"   • `{module}.py`\n"
+        else:
+            # Show condensed view - just first few modules
+            modules_to_show = info["modules"][:6]  # Show first 6
+            for module in modules_to_show:
+                list_text += f"   • `{module}.py`\n"
+            
+            if len(info["modules"]) > 6:
+                remaining = len(info["modules"]) - 6
+                list_text += f"   • ... and {remaining} more modules\n"
         
         list_text += "\n"
     
-    # Summary
-    list_text += f"**📊 Summary:**\n"
+    # Enhanced Summary
+    list_text += f"**📊 COMPLETE SUMMARY:**\n"
     list_text += f"• **{total_plugins}** plugin directories\n"  
-    list_text += f"• **{total_modules}** total modules\n"
-    list_text += f"• **{len(loaded_plugins)}** plugins loaded\n"
+    list_text += f"• **{total_modules}** total Python modules\n"
+    list_text += f"• **{total_subdirs}** subdirectories\n"
+    list_text += f"• **{len(loaded_plugins)}** plugins currently loaded\n\n"
+    
+    list_text += f"**💡 Tips:**\n"
+    list_text += f"• Use `.listmodules detailed` to see all modules\n"
+    list_text += f"• Use `.plugins discover` to see plugin status\n"
+    list_text += f"• Use `.help <module>` for module documentation\n"
     
     # Split message if too long
     if len(list_text) > 4000:
@@ -223,6 +246,74 @@ async def list_all_modules(bot: BOT, message: Message):
             if i == 0:
                 await message.reply(part)
             else:
-                await message.reply(f"**Continued...**\n\n{part}")
+                await message.reply(f"**📋 Continued ({i+1})...**\n\n{part}")
     else:
         await message.reply(list_text)
+
+
+@bot.add_cmd(cmd="debugmodules")
+@error_handler("Debug modules command failed")
+async def debug_modules(bot: BOT, message: Message):
+    """
+    CMD: DEBUGMODULES
+    INFO: Debug command to show detailed module discovery information
+    USAGE: .debugmodules
+    """
+    
+    debug_text = "🔍 **MODULE DISCOVERY DEBUG:**\n\n"
+    
+    # Show the plugins directory path
+    debug_text += f"**Plugins Directory:** `{plugin_loader.plugins_dir}`\n\n"
+    
+    # List all directories found
+    debug_text += "**All Directories Found:**\n"
+    try:
+        for item in plugin_loader.plugins_dir.iterdir():
+            if item.is_dir():
+                is_excluded = item.name.startswith('_') or item.name == 'core'
+                status = "❌ EXCLUDED" if is_excluded else "✅ INCLUDED"
+                debug_text += f"• `{item.name}` - {status}\n"
+        debug_text += "\n"
+    except Exception as e:
+        debug_text += f"Error reading directory: {e}\n\n"
+    
+    # Show comprehensive module info
+    try:
+        modules_info = plugin_loader.get_comprehensive_module_list()
+        debug_text += f"**Detailed Module Discovery:**\n"
+        
+        for plugin_name, info in sorted(modules_info.items()):
+            debug_text += f"\n**📂 {plugin_name}:**\n"
+            debug_text += f"   Direct modules: {info['direct_modules']}\n"
+            debug_text += f"   Subdirectories: {info['subdirectories']}\n"
+            debug_text += f"   Total files: {info['total_files']}\n"
+            debug_text += f"   Modules found:\n"
+            
+            for module in info["modules"][:10]:  # Show first 10
+                debug_text += f"      • {module}.py\n"
+            
+            if len(info["modules"]) > 10:
+                debug_text += f"      • ... and {len(info['modules']) - 10} more\n"
+    
+    except Exception as e:
+        debug_text += f"Error in comprehensive discovery: {e}\n"
+    
+    # Show old method for comparison
+    try:
+        debug_text += f"\n**Old Discovery Method:**\n"
+        old_modules = plugin_loader.discover_all_modules()
+        for plugin_name, modules in sorted(old_modules.items()):
+            debug_text += f"• {plugin_name}: {len(modules)} modules\n"
+    except Exception as e:
+        debug_text += f"Error in old discovery: {e}\n"
+    
+    # Split if too long
+    if len(debug_text) > 4000:
+        parts = [debug_text[i:i+4000] for i in range(0, len(debug_text), 4000)]
+        for i, part in enumerate(parts):
+            if i == 0:
+                await message.reply(part)
+            else:
+                await message.reply(f"**🔍 Debug ({i+1})...**\n\n{part}")
+    else:
+        await message.reply(debug_text)

@@ -31,20 +31,65 @@ class PluginLoader:
         return sorted(plugins)
     
     def discover_all_modules(self) -> Dict[str, List[str]]:
-        """Discover all modules (Python files) in each plugin directory"""
+        """Discover all modules (Python files) in each plugin directory, including subdirectories"""
         modules_by_plugin = {}
         
         for item in self.plugins_dir.iterdir():
             if item.is_dir() and not item.name.startswith('_') and item.name != 'core':
                 modules = []
+                
+                # Get direct Python files in the plugin directory
                 for py_file in item.glob("*.py"):
                     if not py_file.name.startswith('_'):
                         modules.append(py_file.stem)
+                
+                # Also check subdirectories (like ai/gemini)
+                for subdir in item.glob("*/"):
+                    if subdir.is_dir() and not subdir.name.startswith('_'):
+                        for py_file in subdir.glob("*.py"):
+                            if not py_file.name.startswith('_'):
+                                modules.append(f"{subdir.name}/{py_file.stem}")
                 
                 if modules:
                     modules_by_plugin[item.name] = sorted(modules)
         
         return modules_by_plugin
+    
+    def get_comprehensive_module_list(self) -> Dict[str, Dict[str, int]]:
+        """Get a comprehensive list with counts and details"""
+        result = {}
+        
+        for item in self.plugins_dir.iterdir():
+            if item.is_dir() and not item.name.startswith('_') and item.name != 'core':
+                plugin_info = {
+                    "direct_modules": 0,
+                    "subdirectories": 0,
+                    "total_files": 0,
+                    "modules": []
+                }
+                
+                # Count direct Python files
+                direct_files = list(item.glob("*.py"))
+                direct_modules = [f.stem for f in direct_files if not f.name.startswith('_')]
+                plugin_info["direct_modules"] = len(direct_modules)
+                plugin_info["modules"].extend(direct_modules)
+                
+                # Count subdirectories and their files
+                subdirs = [d for d in item.iterdir() if d.is_dir() and not d.name.startswith('_')]
+                plugin_info["subdirectories"] = len(subdirs)
+                
+                for subdir in subdirs:
+                    subdir_files = list(subdir.glob("*.py"))
+                    subdir_modules = [f"{subdir.name}/{f.stem}" for f in subdir_files if not f.name.startswith('_')]
+                    plugin_info["modules"].extend(subdir_modules)
+                
+                plugin_info["total_files"] = len(plugin_info["modules"])
+                plugin_info["modules"] = sorted(plugin_info["modules"])
+                
+                if plugin_info["total_files"] > 0:
+                    result[item.name] = plugin_info
+        
+        return result
     
     async def load_plugin(self, plugin_name: str) -> bool:
         """Load a specific plugin"""
